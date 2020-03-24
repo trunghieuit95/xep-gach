@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>EaselJS demo: Simple animation</title>
+    <script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+    <script>
+
+        // var stage, circle, box, scoreBox;
+        var perTime, score = 0;
+        var gameOver = false;
+
+        function init() {
+            stage = new createjs.Stage("demoCanvas");
+            boardWidth = 10
+            boardHeight = 23
+            currentBoard = new Array(this.boardHeight).fill(0).map(() => new Array(this.boardWidth).fill(0))
+            landedBoard = new Array(this.boardHeight).fill(0).map(() => new Array(this.boardWidth).fill(0))
+            currentTetromino = randomTetromino();
+            // newTet = randomTetromino();
+            // console.log(currentTetromino, currentTetromino.__proto__.constructor.color);
+
+            // circle = new createjs.Shape();
+            box = new createjs.Shape();
+            scoreBox = new createjs.Text("Score : " + score, "20px Arial", "#ff7700");
+            gameStart = new createjs.Text("Start", "40px Arial", "#ff7700");
+            gameStart.x = 100;
+            gameStart.y = 300;
+            // box2 = new createjs.Shape();
+            // circle.graphics.beginFill("green").drawRect(0, 0, 50,50);
+            // updateCurrentBoard();
+            // box.graphics.beginStroke("black").drawRect(0, 90, 305, 605);
+            // console.log(currentBoard);
+
+            // circle.x = 100;
+            // circle.y = 100;
+            // stage.addChild(circle);
+            // stage.addChild(box);
+            stage.addChild(gameStart);
+            stage.update();
+            gameStart.addEventListener("click", function (event) {
+                console.log('clicked');
+                stage.removeChild(gameStart);
+                stage.addChild(box, scoreBox);
+                createjs.Ticker.on("tick", tick);
+                createjs.Ticker.setFPS(30);
+                // stage.update();
+            });
+            // createjs.Ticker.on("tick", tick);
+            // createjs.Ticker.setFPS(30);
+        }
+
+        function tick(event) {
+            if (perTime !== Math.floor(event.time / 500) && !gameOver) {
+                perTime = Math.floor(event.time / 500);
+                progress();
+                updateCurrentBoard();
+                draw();
+            }
+            stage.update(event); // important!!
+        }
+
+        function progress() {
+            // currentTetromino.fall();
+            let nextTetromino = new currentTetromino.constructor(currentTetromino.row + 1, currentTetromino.col, currentTetromino.angle)
+            if (!bottomOverlapped(nextTetromino) && !landedOverlapped(nextTetromino)) {
+                currentTetromino.fall()
+            } else {
+                // let checkGameOver = 0;
+                mergeCurrentTetromino();
+                // for(let i =0;i<10;i++){
+                //     if(currentBoard[2][i]>0){
+                //         gameOver = true;
+                //         break;
+                //     }
+                // }
+                if (currentBoard[3][4] >  0 || currentBoard[3][5]) {
+                    console.log('gameover');
+                    gameOver = true;
+                }
+                else {
+                    currentTetromino = randomTetromino();
+                }
+                // console.log(currentBoard[2]);
+                // currentTetromino = randomTetromino();
+            }
+        }
+
+        function draw() {
+            if (gameOver) {
+                // box.graphics.clear();
+                gameStart.text = "Game Over"
+                stage.addChild(gameStart);
+                box.graphics.beginFill("rgba(0, 0, 0, 0.7)").drawRect(0, 0, 305, 605);
+                stage.update();
+            } else {
+                box.graphics.clear();
+                box.graphics.beginStroke("black").drawRect(0, 0, 305, 605);
+                scoreBox.text = "Score : " + score;
+                scoreBox.x = 350;
+                scoreBox.y = 200;
+                for (let y = 3; y < boardHeight; y++) {
+                    for (let x = 0; x < boardWidth; x++) {
+                        box.graphics.beginStroke("black").drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                        box.graphics.beginFill("white").drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                        if (currentBoard[y][x] > 0) {
+                            if (currentBoard[y][x] === 1) {
+                                box.graphics.beginFill('rgb(255, 87, 34)').drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            } else if (currentBoard[y][x] === 2) {
+                                box.graphics.beginFill('rgb(63, 81, 181)').drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            } else if (currentBoard[y][x] === 3) {
+                                box.graphics.beginFill('rgb(255, 235, 59)').drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            } else if (currentBoard[y][x] === 4) {
+                                box.graphics.beginFill('rgb(156, 39, 176)').drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            } else if (currentBoard[y][x] === 5) {
+                                box.graphics.beginFill('rgb(76, 175, 80)').drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            } else if (currentBoard[y][x] === 6) {
+                                box.graphics.beginFill('rgb(183, 28, 28)').drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            } else if (currentBoard[y][x] === 7) {
+                                box.graphics.beginFill('rgb(0, 188, 212)').drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            } else {
+                                box.graphics.beginFill("black").drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function bottomOverlapped(tetromino) {
+            if (tetromino.row + tetromino.height > this.boardHeight) {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        function landedOverlapped(tetromino) {
+            for (let i = 0; i < tetromino.height; i++) {
+                for (let j = 0; j < tetromino.width; j++) {
+                    if (tetromino.shape[i][j] > 0 &&
+                        landedBoard[tetromino.row + i][tetromino.col + j] > 0) {
+                        return true
+                    }
+                }
+            }
+            return false
+        }
+
+        function mergeCurrentTetromino() {
+            for (let i = 0; i < this.currentTetromino.height; i++) {
+                for (let j = 0; j < this.currentTetromino.width; j++) {
+                    if (this.currentTetromino.shape[i][j] > 0) {
+                        landedBoard[this.currentTetromino.row + i][this.currentTetromino.col + j] = this.currentTetromino.shape[i][j];
+                    }
+                }
+            }
+
+            for (let i = 0; i < boardHeight; i++) {
+                let checkClear = 0;
+                for (let j = 0; j < boardWidth; j++) {
+                    if (landedBoard[i][j] > 0) {
+                        checkClear++;
+                        if (checkClear === 10) {
+                            landedBoard.splice(i, 1);
+                            let newItem = new Array(boardWidth).fill(0);
+                            landedBoard.unshift(newItem);
+                            score += 100;
+                            checkClear = 0;
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateCurrentBoard() {
+            for (let i = 0; i < boardHeight; i++) {
+                for (let j = 0; j < boardWidth; j++) {
+                    currentBoard[i][j] = landedBoard[i][j];
+                }
+            }
+
+            for (let i = 0; i < currentTetromino.height; i++) {
+                for (let j = 0; j < currentTetromino.width; j++) {
+                    if (currentTetromino.shape[i][j] > 0) {
+                        currentBoard[currentTetromino.row + i][currentTetromino.col + j] = currentTetromino.shape[i][j]
+                    }
+                }
+            }
+        }
+
+        function randomTetromino() {
+            const randNum = Math.floor(Math.random() * Math.floor(7))
+            switch (randNum) {
+                case 0:
+                    return new LShape(1, 4)
+                case 1:
+                    return new JShape(1, 4)
+                case 2:
+                    return new OShape(2, 4)
+                case 3:
+                    return new TShape(2, 4)
+                case 4:
+                    return new SShape(2, 4)
+                case 5:
+                    return new ZShape(2, 4)
+                case 6:
+                    return new IShape(0, 4)
+            }
+        }
+
+        class Tetromino {
+            constructor(row, col, angle = 0) {
+                if (this.constructor === Tetromino) {
+                    throw new Error("This is an abstract class.")
+                }
+                this.row = row
+                this.col = col
+                this.angle = angle
+            }
+
+            get shape() {
+                return this.constructor.shapes[this.angle]
+            }
+
+            get width() {
+                return this.shape[0].length
+            }
+
+            get height() {
+                return this.shape.length
+            }
+
+            fall() {
+                this.row += 1
+            }
+
+            rotate() {
+                if (this.angle < 3) {
+                    this.angle += 1
+                } else {
+                    this.angle = 0
+                }
+            }
+
+            move(direction) {
+                if (direction === 'left') {
+                    this.col -= 1
+                } else if (direction === 'right') {
+                    this.col += 1
+                }
+            }
+        }
+
+        class LShape extends Tetromino { }
+
+        LShape.shapes =
+            [[[1, 0],
+            [1, 0],
+            [1, 1]],
+
+            [[1, 1, 1],
+            [1, 0, 0]],
+
+            [[1, 1],
+            [0, 1],
+            [0, 1]],
+
+            [[0, 0, 1],
+            [1, 1, 1]]]
+
+        LShape.color = 'rgb(255, 87, 34)'
+
+        class JShape extends Tetromino { }
+
+        JShape.shapes =
+            [[[0, 2],
+            [0, 2],
+            [2, 2]],
+
+            [[2, 0, 0],
+            [2, 2, 2]],
+
+            [[2, 2],
+            [2, 0],
+            [2, 0]],
+
+            [[2, 2, 2],
+            [0, 0, 2]]]
+
+        JShape.color = 'rgb(63, 81, 181)'
+
+        class OShape extends Tetromino { }
+
+        OShape.shapes =
+            [[[3, 3],
+            [3, 3]],
+
+            [[3, 3],
+            [3, 3]],
+
+            [[3, 3],
+            [3, 3]],
+
+            [[3, 3],
+            [3, 3]]]
+
+        OShape.color = 'rgb(255, 235, 59)'
+
+        class TShape extends Tetromino { }
+
+        TShape.shapes =
+            [[[0, 4, 0],
+            [4, 4, 4]],
+
+            [[4, 0],
+            [4, 4],
+            [4, 0]],
+
+            [[4, 4, 4],
+            [0, 4, 0]],
+
+            [[0, 4],
+            [4, 4],
+            [0, 4]]]
+
+        TShape.color = 'rgb(156, 39, 176)'
+
+        class SShape extends Tetromino { }
+
+        SShape.shapes =
+            [[[0, 5, 5],
+            [5, 5, 0]],
+
+            [[5, 0],
+            [5, 5],
+            [0, 5]],
+
+            [[0, 5, 5],
+            [5, 5, 0]],
+
+            [[5, 0],
+            [5, 5],
+            [0, 5]]]
+
+        SShape.color = 'rgb(76, 175, 80)'
+
+        class ZShape extends Tetromino { }
+
+        ZShape.shapes =
+            [[[6, 6, 0],
+            [0, 6, 6]],
+
+            [[0, 6],
+            [6, 6],
+            [6, 0]],
+
+            [[6, 6, 0],
+            [0, 6, 6]],
+
+            [[0, 6],
+            [6, 6],
+            [6, 0]]]
+
+        ZShape.color = 'rgb(183, 28, 28)'
+
+        class IShape extends Tetromino { }
+
+        IShape.shapes =
+            [[[7],
+            [7],
+            [7],
+            [7]],
+
+            [[7, 7, 7, 7]],
+
+            [[7],
+            [7],
+            [7],
+            [7]],
+
+            [[7, 7, 7, 7]]]
+
+        IShape.color = 'rgb(0, 188, 212)'
+
+        window.addEventListener('keydown', (event) => {
+            switch (event.keyCode) {
+                case 37: // Left
+                    tryMoveLeft()
+                    break
+
+                case 38: // Up
+                    tryRotating()
+                    break
+
+                case 39: // Right
+                    tryMoveRight()
+                    break
+
+                case 40: // Down
+                    tryMoveDown();
+                    break
+            }
+        })
+
+        function tryMoveDown() {
+            if (!gameOver) {
+                progress()
+                updateCurrentBoard()
+                draw()
+            }
+        }
+
+        function leftOverlapped(tetromino) {
+            if (tetromino.col < 0) {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        function rightOverlapped(tetromino) {
+            if (tetromino.col + tetromino.width > boardWidth) {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        function tryMoveLeft() {
+            const tempTetromino = new currentTetromino.constructor(currentTetromino.row, currentTetromino.col - 1, currentTetromino.angle)
+            if (!leftOverlapped(tempTetromino) &&
+                !landedOverlapped(tempTetromino)) {
+                currentTetromino.col -= 1
+                updateCurrentBoard()
+                draw()
+            }
+        }
+
+        function tryMoveRight() {
+            const tempTetromino = new currentTetromino.constructor(currentTetromino.row, currentTetromino.col + 1, currentTetromino.angle)
+            if (!rightOverlapped(tempTetromino) &&
+                !landedOverlapped(tempTetromino)) {
+                currentTetromino.col += 1
+                updateCurrentBoard()
+                draw()
+            }
+        }
+
+        function tryRotating() {
+            const tempTetromino = new currentTetromino.constructor(currentTetromino.row + 1, currentTetromino.col, currentTetromino.angle)
+            tempTetromino.rotate()
+            if (!rightOverlapped(tempTetromino) &&
+                !bottomOverlapped(tempTetromino) &&
+                !landedOverlapped(tempTetromino)) {
+                currentTetromino.rotate()
+                updateCurrentBoard()
+                draw()
+            }
+        }
+    </script>
+</head>
+
+<body onload="init();">
+    <canvas id="demoCanvas" width="500" height="700">
+        alternate content
+    </canvas>
+</body>
+
+</html>
