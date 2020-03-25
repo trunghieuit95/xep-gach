@@ -21,11 +21,23 @@
             // console.log(currentTetromino, currentTetromino.__proto__.constructor.color);
 
             // circle = new createjs.Shape();
+            bgScreen = new createjs.Shape();
             box = new createjs.Shape();
+            bgButtonStart = new createjs.Shape();
             scoreBox = new createjs.Text("Score : " + score, "20px Arial", "#ff7700");
-            gameStart = new createjs.Text("Start", "40px Arial", "#ff7700");
-            gameStart.x = 100;
-            gameStart.y = 300;
+            gameStart = new createjs.Text("Start", "40px Arial", "#e1f5fe");
+            buttonStart = new createjs.Container();
+            gameTitle = new createjs.Text("Xếp Gạch", "bold 60px Arial", "#33691e");
+            gameOverContainer = new createjs.Container();
+            gameOverText = new createjs.Text("Game Over", "bold 50px Arial", "#f1f8e9");
+            // buttonRestart = new createjs.Container();
+            bgButtonRestart = new createjs.Shape();
+            labelButtonRestart = new createjs.Text("Restart", "20px Arial", "#e1f5fe");
+            // buttonQuit = new createjs.Container();
+            bgButtonQuit = new createjs.Shape();
+            labelButtonQuit = new createjs.Text("Quit", "20px Arial", "#e1f5fe");
+            // gameStart.x = 100;
+            // gameStart.y = 300;
             // box2 = new createjs.Shape();
             // circle.graphics.beginFill("green").drawRect(0, 0, 50,50);
             // updateCurrentBoard();
@@ -36,69 +48,68 @@
             // circle.y = 100;
             // stage.addChild(circle);
             // stage.addChild(box);
-            stage.addChild(gameStart);
-            stage.update();
-            gameStart.addEventListener("click", function (event) {
-                console.log('clicked');
-                stage.removeChild(gameStart);
-                stage.addChild(box, scoreBox);
-                createjs.Ticker.on("tick", tick);
-                createjs.Ticker.setFPS(30);
-                // stage.update();
-            });
+            titleView();
+            // stage.addChild(gameStart);
+            // stage.update();
+            // gameStart.addEventListener("click", function (event) {
+            //     console.log('clicked');
+            //     stage.removeChild(gameStart);
+            //     stage.addChild(box, scoreBox);
+            //     createjs.Ticker.on("tick", tick);
+            //     createjs.Ticker.setFPS(30);
+            //     // stage.update();
+            // });
             // createjs.Ticker.on("tick", tick);
             // createjs.Ticker.setFPS(30);
         }
 
         function tick(event) {
-            if (perTime !== Math.floor(event.time / 500) && !gameOver) {
-                perTime = Math.floor(event.time / 500);
-                progress();
-                updateCurrentBoard();
-                draw();
+            if (!event.paused) {
+                if (perTime !== Math.floor(event.time / 500) && !gameOver) {
+                    perTime = Math.floor(event.time / 500);
+                    progress();
+                    updateCurrentBoard();
+                    draw();
+                }
+                // draw();
+                stage.update(event); // important!!
             }
-            stage.update(event); // important!!
         }
 
+        // game loop
         function progress() {
             // currentTetromino.fall();
             let nextTetromino = new currentTetromino.constructor(currentTetromino.row + 1, currentTetromino.col, currentTetromino.angle)
             if (!bottomOverlapped(nextTetromino) && !landedOverlapped(nextTetromino)) {
                 currentTetromino.fall()
             } else {
-                // let checkGameOver = 0;
                 mergeCurrentTetromino();
-                // for(let i =0;i<10;i++){
-                //     if(currentBoard[2][i]>0){
-                //         gameOver = true;
-                //         break;
-                //     }
-                // }
-                if (currentBoard[3][4] >  0 || currentBoard[3][5]) {
+                if (currentBoard[3][4] > 0 || currentBoard[3][5] > 0) {
                     console.log('gameover');
                     gameOver = true;
                 }
                 else {
                     currentTetromino = randomTetromino();
                 }
-                // console.log(currentBoard[2]);
-                // currentTetromino = randomTetromino();
             }
         }
 
+        // render view
         function draw() {
             if (gameOver) {
-                // box.graphics.clear();
-                gameStart.text = "Game Over"
-                stage.addChild(gameStart);
-                box.graphics.beginFill("rgba(0, 0, 0, 0.7)").drawRect(0, 0, 305, 605);
-                stage.update();
+                // gameStart.text = "Game Over"
+                gameOverView();
             } else {
+                stage.removeChild(scoreBox);
                 box.graphics.clear();
                 box.graphics.beginStroke("black").drawRect(0, 0, 305, 605);
                 scoreBox.text = "Score : " + score;
-                scoreBox.x = 350;
+                scoreBox.font = "20px Arial";
+                scoreBox.color = "#ff7700";
+                scoreBox.x = 320;
                 scoreBox.y = 200;
+                scoreBox.textAlign = "none";
+                stage.addChild(scoreBox);
                 for (let y = 3; y < boardHeight; y++) {
                     for (let x = 0; x < boardWidth; x++) {
                         box.graphics.beginStroke("black").drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
@@ -207,6 +218,92 @@
                 case 6:
                     return new IShape(0, 4)
             }
+        }
+
+        function titleView() {
+            bgScreen.graphics.beginFill("#fce4ec").drawRect(0, 0, 450, 605);
+            bgScreen.graphics.setStrokeStyle(10);
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 12; j++) {
+                    if (j % 2 === 0) {
+                        bgScreen.graphics.beginStroke("white").drawRect((100 * i), (50 * j), 100, 50);
+                    }
+                    else {
+                        bgScreen.graphics.beginStroke("white").drawRect((100 * i) - 50, (50 * j), 100, 50);
+                    }
+                }
+            }
+            bgButtonStart.graphics.beginFill("#039be5").drawRoundRect(0, 0, 150, 70, 35);
+            buttonStart.x = 150;
+            buttonStart.y = 250;
+            gameStart.textAlign = "center";
+            gameStart.textBaseline = "middle";
+            gameStart.x = 150 / 2;
+            gameStart.y = 70 / 2;
+            gameTitle.x = 100;
+            gameTitle.y = 150;
+            buttonStart.addChild(bgButtonStart, gameStart);
+            stage.addChild(bgScreen, buttonStart, gameTitle);
+            stage.update();
+            buttonStart.addEventListener("click", function (event) {
+                gameStartNow();
+            });
+        }
+
+        function gameOverView() {
+            stage.removeChild(scoreBox);
+            createjs.Ticker.paused = true;
+            gameOverContainer.x = 150;
+            gameOverContainer.y = 200;
+            gameOverText.textAlign = "center";
+            gameOverText.x = 150 / 2;
+            scoreBox.textAlign = "center";
+            scoreBox.x = 150 / 2;
+            scoreBox.y = 65;
+            scoreBox.text = 'Your score : ' + score;
+            scoreBox.color = '#f1f8e9';
+            bgButtonRestart.graphics.beginFill("#039be5").drawRoundRect(-50, 100, 100, 50, 25);
+            labelButtonRestart.x = -35;
+            labelButtonRestart.y = 115;
+            bgButtonQuit.graphics.beginFill("#039be5").drawRoundRect(100, 100, 100, 50, 25);
+            labelButtonQuit.x = 130;
+            labelButtonQuit.y = 115;
+            gameOverContainer.addChild(gameOverText, scoreBox, bgButtonRestart, bgButtonQuit, labelButtonRestart, labelButtonQuit);
+            stage.addChild(gameOverContainer);
+            box.graphics.beginFill("rgba(0, 0, 0, 0.8)").drawRect(0, 0, 450, 605);
+            stage.update();
+            bgButtonRestart.addEventListener("click", function (event) {
+                // console.log('restart');
+                box.graphics.clear();
+                stage.removeChild(gameOverContainer);
+                gameOver = false;
+                setNewGame();
+                gameStartNow();
+            });
+            bgButtonQuit.addEventListener("click", function (event) {
+                // console.log('quit');
+                box.graphics.clear();
+                stage.removeChild(gameOverContainer);
+                gameOver = false;
+                setNewGame();
+                titleView();
+            });
+        }
+
+        function setNewGame() {
+            currentBoard = new Array(this.boardHeight).fill(0).map(() => new Array(this.boardWidth).fill(0))
+            landedBoard = new Array(this.boardHeight).fill(0).map(() => new Array(this.boardWidth).fill(0))
+            currentTetromino = randomTetromino();
+        }
+
+        function gameStartNow() {
+            bgScreen.graphics.clear();
+            bgScreen.graphics.beginStroke("#fce4ec").drawRect(0, 0, 450, 605);
+            stage.removeChild(buttonStart, gameTitle);
+            stage.addChild(box, scoreBox);
+            createjs.Ticker.on("tick", tick);
+            createjs.Ticker.paused = false;
+            createjs.Ticker.setFPS(30);
         }
 
         class Tetromino {
@@ -462,7 +559,7 @@
 </head>
 
 <body onload="init();">
-    <canvas id="demoCanvas" width="500" height="700">
+    <canvas id="demoCanvas" width="450" height="605">
         alternate content
     </canvas>
 </body>
