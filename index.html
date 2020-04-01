@@ -9,7 +9,7 @@
 
         // var stage, circle, box, scoreBox;
         var nextTetromioIndex;
-        var perTime, score = 0;
+        var perTime = 0, score = 0, countRow = 0;
         var gameOver = false;
         var bag = shuffleArray([0, 1, 2, 3, 4, 5, 6]);
         var listColor = ['rgb(255, 87, 34)', 'rgb(63, 81, 181)', 'rgb(255, 235, 59)', 'rgb(156, 39, 176)', 'rgb(76, 175, 80)', 'rgb(183, 28, 28)', 'rgb(0, 188, 212)']
@@ -42,6 +42,7 @@
             labelButtonQuit = new createjs.Text("Quit", "20px Arial", "#e1f5fe");
             animationGetScore = new createjs.Shape();
             nextTetromioBox = new createjs.Shape();
+            previewTetromio = new createjs.Shape();
             titleView();
         }
 
@@ -60,10 +61,12 @@
 
         // game loop
         function progress() {
-            let nextTetromino = new currentTetromino.constructor(currentTetromino.row + 1, currentTetromino.col, currentTetromino.angle)
+            let nextTetromino = new currentTetromino.constructor(currentTetromino.row + 1, currentTetromino.col, currentTetromino.angle);
+            renderPreviewTet();
             if (!bottomOverlapped(nextTetromino) && !landedOverlapped(nextTetromino)) {
                 currentTetromino.fall()
             } else {
+                previewTetromio.graphics.clear();
                 mergeCurrentTetromino();
                 if (currentBoard[3][4] > 0 || currentBoard[3][5] > 0) {
                     console.log('gameover');
@@ -93,7 +96,7 @@
                 nextTetromioBox.graphics.beginStroke("black").drawRect(315, 65, 125, 125);
                 renderNextTet(nextTetromioIndex);
                 scoreBox.textAlign = "none";
-                stage.addChild(scoreBox, nextTetromioBox);
+                stage.addChild(scoreBox, nextTetromioBox, previewTetromio);
                 for (let y = 3; y < boardHeight; y++) {
                     for (let x = 0; x < boardWidth; x++) {
                         box.graphics.beginStroke("black").drawRect((5 + (30 * x)), (5 + (30 * (y - 3))), 25, 25);
@@ -235,7 +238,7 @@
         }
 
         function gameOverView() {
-            stage.removeChild(scoreBox,nextTetromioBox);
+            stage.removeChild(scoreBox, nextTetromioBox);
             createjs.Ticker.paused = true;
             gameOverContainer.x = 150;
             gameOverContainer.y = 200;
@@ -505,6 +508,10 @@
                 case 40: // Down
                     tryMoveDown();
                     break
+
+                case 32: // Space
+                    tryFastDown();
+                    break
             }
         })
 
@@ -513,6 +520,24 @@
                 progress()
                 updateCurrentBoard()
                 draw()
+            }
+        }
+
+        function tryFastDown() {
+            if (!gameOver) {
+                for (let i = 1; i < 23; i++) {
+                    let nextTetromino = new currentTetromino.constructor(currentTetromino.row + 1, currentTetromino.col, currentTetromino.angle);
+                    progress();
+                    if (!(!bottomOverlapped(nextTetromino) && !landedOverlapped(nextTetromino))) {
+                        // progress()
+                        break;
+                    }
+                    else {
+                        // progress()
+                        updateCurrentBoard();
+                        draw();
+                    }
+                }
             }
         }
 
@@ -539,6 +564,7 @@
                 currentTetromino.col -= 1
                 updateCurrentBoard()
                 draw()
+                renderPreviewTet()
             }
         }
 
@@ -549,6 +575,7 @@
                 currentTetromino.col += 1
                 updateCurrentBoard()
                 draw()
+                renderPreviewTet()
             }
         }
 
@@ -561,6 +588,7 @@
                 currentTetromino.rotate()
                 updateCurrentBoard()
                 draw()
+                renderPreviewTet()
             }
         }
         function renderNextTet(id_nextTet) {
@@ -634,8 +662,27 @@
                 nextTetromioBox.graphics.beginFill(listColor[6]).drawRect(365, 130, 25, 25);
                 nextTetromioBox.graphics.beginFill(listColor[6]).drawRect(365, 160, 25, 25);
             }
-            else{
+            else {
                 console.log('not found id');
+            }
+        }
+
+        function renderPreviewTet() {
+            previewTetromio.graphics.clear();
+            for (let i = 1; i < 20; i++) {
+                let previewTetromino = new currentTetromino.constructor(currentTetromino.row + i, currentTetromino.col, currentTetromino.angle);
+                if (!(!bottomOverlapped(previewTetromino) && !landedOverlapped(previewTetromino))) {
+                    let shapePreview = previewTetromino.shape;
+                    for (let y = 0; y < shapePreview.length; y++) {
+                        for (let x = 0; x < shapePreview[y].length; x++) {
+                            if (shapePreview[y][x] > 0) {
+                                previewTetromio.graphics.beginFill("rgba(255, 100, 200, 0.5)").drawRect((5 + 30 * (x + previewTetromino.col)), (5 + 30 * (currentTetromino.row + i + y - 4)), 25, 25);
+                            }
+                        }
+                    }
+                    countRow = i;
+                    break;
+                }
             }
         }
     </script>
