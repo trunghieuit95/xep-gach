@@ -28,7 +28,7 @@
             bgScreen = new createjs.Shape();
             box = new createjs.Shape();
             bgButtonStart = new createjs.Shape();
-            scoreBox = new createjs.Text("Score : " + score, "20px Arial", "#ff7700");
+            scoreBox = new createjs.Text();
             gameStart = new createjs.Text("Start", "40px Arial", "#e1f5fe");
             buttonStart = new createjs.Container();
             gameTitle = new createjs.Text("Xếp Gạch", "bold 60px Arial", "#33691e");
@@ -529,11 +529,12 @@
                     let nextTetromino = new currentTetromino.constructor(currentTetromino.row + 1, currentTetromino.col, currentTetromino.angle);
                     progress();
                     if (!(!bottomOverlapped(nextTetromino) && !landedOverlapped(nextTetromino))) {
-                        // progress()
+                        if (gameOver) {
+                            gameOverView();
+                        }
                         break;
                     }
                     else {
-                        // progress()
                         updateCurrentBoard();
                         draw();
                     }
